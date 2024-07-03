@@ -5511,7 +5511,6 @@
   }
 
   // src/controllers/authController.ts
-  var JWT_SECRET = "your_secret_key";
   var register = async (c) => {
     const body = await c.req.json();
     const parsed = UserSchema.safeParse(body);
@@ -5537,7 +5536,7 @@
     ).bind(username).all();
     const user = results[0];
     if (user && await verifyPassword(password, user.password)) {
-      const token = await createJWT({ id: user.id }, JWT_SECRET);
+      const token = await createJWT({ id: user.id }, c.env.JWT_SECRET);
       return c.json({ message: "Login successful", token });
     }
     return c.json({ message: "Invalid credentials" }, 401);
@@ -5558,7 +5557,7 @@
 
   // src/controllers/taskController.ts
   var createTask = async (c) => {
-    const parsed = TaskSchema.safeParse(c.req.json());
+    const parsed = TaskSchema.safeParse(await c.req.json());
     if (!parsed.success) {
       return c.json(parsed.error, 400);
     }
@@ -5580,15 +5579,14 @@
   };
 
   // src/middlewares/authMiddleware.ts
-  var JWT_SECRET2 = "your_secret_key";
   var authMiddleware = async (c, next) => {
     const authHeader = c.req.header("authorization");
     if (!authHeader) {
       return c.json({ message: "No token provided" }, 401);
     }
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.split(" ")[0];
     try {
-      const user = await verifyJWT(token, JWT_SECRET2);
+      const user = await verifyJWT(token, c.env.JWT_SECRET);
       if (!user) {
         return c.json({ message: "Invalid token" }, 401);
       }

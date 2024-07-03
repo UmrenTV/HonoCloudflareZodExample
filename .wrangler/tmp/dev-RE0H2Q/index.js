@@ -1,4 +1,4 @@
-// .wrangler/tmp/bundle-gXVKCX/checked-fetch.js
+// .wrangler/tmp/bundle-UonQb8/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init2) {
   const url = request instanceof URL ? request : new URL(
@@ -7377,7 +7377,6 @@ async function verifyJWT(token, secret) {
 }
 
 // src/controllers/authController.ts
-var JWT_SECRET = "your_secret_key";
 var register = async (c) => {
   const body = await c.req.json();
   const parsed = UserSchema.safeParse(body);
@@ -7403,7 +7402,7 @@ var login = async (c) => {
   ).bind(username).all();
   const user = results[0];
   if (user && await verifyPassword(password, user.password)) {
-    const token = await createJWT({ id: user.id }, JWT_SECRET);
+    const token = await createJWT({ id: user.id }, c.env.JWT_SECRET);
     return c.json({ message: "Login successful", token });
   }
   return c.json({ message: "Invalid credentials" }, 401);
@@ -7446,17 +7445,14 @@ var deleteTask = async (c) => {
 };
 
 // src/middlewares/authMiddleware.ts
-var JWT_SECRET2 = "your_secret_key";
 var authMiddleware = async (c, next) => {
   const authHeader = c.req.header("authorization");
   if (!authHeader) {
     return c.json({ message: "No token provided" }, 401);
   }
-  console.log(authHeader, "AUTH HEADER");
   const token = authHeader.split(" ")[0];
-  console.log(token, "TOKEN");
   try {
-    const user = await verifyJWT(token, JWT_SECRET2);
+    const user = await verifyJWT(token, c.env.JWT_SECRET);
     if (!user) {
       return c.json({ message: "Invalid token" }, 401);
     }
@@ -7551,7 +7547,7 @@ var jsonError = async (request, env2, _ctx, middlewareCtx) => {
 };
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-gXVKCX/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-UonQb8/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -7580,7 +7576,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
   ]);
 }
 
-// .wrangler/tmp/bundle-gXVKCX/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-UonQb8/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

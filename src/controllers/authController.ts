@@ -3,8 +3,6 @@ import { UserSchema } from "../models/user";
 import { hashPassword, verifyPassword } from "../utils/auth";
 import { createJWT } from "../utils/jwt";
 
-const JWT_SECRET = "your_secret_key";
-
 export const register = async (c: Context) => {
     const body = await c.req.json();
     const parsed = UserSchema.safeParse(body);
@@ -35,7 +33,7 @@ export const login = async (c: Context) => {
         .all();
     const user = results[0];
     if (user && (await verifyPassword(password, user.password))) {
-        const token = await createJWT({ id: user.id }, JWT_SECRET);
+        const token = await createJWT({ id: user.id }, c.env.JWT_SECRET);
         return c.json({ message: "Login successful", token });
     }
     return c.json({ message: "Invalid credentials" }, 401);

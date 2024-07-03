@@ -19,3 +19,6 @@ preview_bucket_name = "example-project-preview"
 type = "ESModule"
 globs = ["src/**/*"]
 exclude = ["node_modules/@mapbox/node-pre-gyp/lib/util/s3_setup.js", "node_modules/aws-sdk", "node_modules/nock"]
+
+[vars]
+JWT_SECRET = "your_secret_key"
