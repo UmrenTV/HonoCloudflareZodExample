@@ -1,0 +1,21 @@
+name = "example-project"
+main = "src/index.ts"
+compatibility_date = "2023-08-23"
+account_id = "account_id"
+workers_dev = true
+node_compat = true
+
+[[d1_databases]]
+database_name = "example-project-db"
+binding = "DATABASE"
+database_id = "database_id"
+
+[[r2_buckets]]
+binding = "BUCKETBIND"
+bucket_name = "example-project"
+preview_bucket_name = "example-project-preview"
+
+[[rules]]
+type = "ESModule"
+globs = ["src/**/*"]
+exclude = ["node_modules/@mapbox/node-pre-gyp/lib/util/s3_setup.js", "node_modules/aws-sdk", "node_modules/nock"]
