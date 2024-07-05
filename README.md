@@ -1,6 +1,6 @@
 # Readme
 ## Basic Description
-I have created this project inspired by a job interview to test my Typescript skills, that I haven't used in 1 year or so.  
+I have created this project inspired by the idea to test my Typescript skills, that I haven't used in a while.
 This project is simple server based on NodeJS with Typescript, Hono, Cloudflare D1 and R2 database/storage respectively, Workers, Zod, Drizzle, etc  
 Not many features, it's basic CRUD operations for managing tasks, create, getAll, getById, update, delete.  
 I have implemented base CRUD service that can be used for other CRUD operations in the future, like maybe notes, calendar events, etc  
