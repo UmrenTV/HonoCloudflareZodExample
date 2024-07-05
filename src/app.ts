@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { authRoutes } from "./routes/authRoutes";
 import { taskRoutes } from "./routes/taskRoutes";
+import { Errors } from "./types/messages.d";
 
 const app = new Hono();
 
@@ -14,7 +15,7 @@ app.onError((err, c) => {
     if (err instanceof HTTPException) {
         return c.json({ error: true, message: err.message }, err.status);
     } else {
-        return c.json({ error: true, message: "Internal Server Error" }, 500);
+        return c.json({ error: true, message: Errors.ServerError }, 500);
     }
 });
 

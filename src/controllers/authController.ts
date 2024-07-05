@@ -2,6 +2,7 @@ import { Context } from "hono";
 import { UserSchema, UserRole } from "../models/user";
 import { hashPassword, verifyPassword } from "../utils/auth";
 import { createJWT } from "../utils/jwt";
+import { Success, Errors } from "../types/messages.d";
 
 // Interfaces for the Register/Login response/request
 
@@ -43,7 +44,7 @@ export const register = async (c: Context): Promise<Response> => {
         .bind(username, hashedPassword, UserRole.User)
         .run();
     const successResponse: RegisterResponse = {
-        message: "User registered successfully",
+        message: Success.UserRegistered,
     };
     return c.json(successResponse, 201);
 };
@@ -72,13 +73,13 @@ export const login = async (c: Context): Promise<Response> => {
             c.env.JWT_SECRET
         );
         const successResponse: LoginResponse = {
-            message: "Login successful",
+            message: Success.UserLogged,
             token,
         };
         return c.json(successResponse, 200);
     }
     const errorResponse: LoginResponse = {
-        message: "Invalid credentials",
+        message: Errors.InvalidCredentials,
     };
     return c.json(errorResponse, 400);
 };
