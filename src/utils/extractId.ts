@@ -16,7 +16,10 @@ export async function extractId(c: Context): Promise<number | null> {
         if (!user) {
             throw new HTTPException(401, { message: "Invalid token" });
         }
-        return user.id;
+        if (user.id && typeof user.id === "number") {
+            return user.id;
+        }
+        return null;
     } catch {
         throw new HTTPException(401, { message: "Invalid token" });
     }
