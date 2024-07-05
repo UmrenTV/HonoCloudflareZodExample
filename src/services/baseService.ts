@@ -1,13 +1,13 @@
 import { Context } from "hono";
 
-interface IBaseService<T extends Record<string, any>> {
+interface IBaseService<T extends Record<string, number | string>> {
     create(c: Context, item: T): Promise<void>;
     getById(c: Context, id: number): Promise<T | null>;
     update(c: Context, id: number, item: T): Promise<void>;
     delete(c: Context, id: number): Promise<void>;
 }
 
-export class BaseService<T extends Record<string, any>>
+export class BaseService<T extends Record<string, string | number>>
     implements IBaseService<T>
 {
     private tableName: string;
