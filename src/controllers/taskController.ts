@@ -1,46 +1,79 @@
 import { Context } from "hono";
-import { TaskSchema } from "../models/task";
+import { TaskSchema, Task } from "../models/task";
+import { BaseService } from "../services/baseService";
+import { extractId } from "../utils/extractId";
+
+const taskService = new BaseService<Task>("tasks");
 
 export const createTask = async (c: Context) => {
+    const body = await c.req.json();
+    const userId = await extractId(c);
+    if (typeof userId !== "number") {
+        return c.json({ message: "Invalid token" }, 401);
+    }
+    body.userId = userId;
     const parsed = TaskSchema.safeParse(await c.req.json());
     if (!parsed.success) {
         return c.json(parsed.error, 400);
     }
-    const { userId, title, completed } = parsed.data;
-    await c.env.DATABASE.prepare(
-        `INSERT INTO tasks (userId, title, completed) VALUES (?, ?, ?)`
-    )
-        .bind(userId, title, completed)
-        .run();
+    await taskService.create(c, parsed.data);
     return c.json({ message: "Task created successfully." });
 };
 
-export const getTask = async (c: Context) => {
-    const { results } = await c.env.DATABASE.prepare(
-        `SELECT * FROM tasks WHERE userId = ?`
-    )
-        .bind(c.req.param("userId"))
-        .run();
+export const getAllTasks = async (c: Context) => {
+    const id = await extractId(c);
+    if (typeof id === "number") {
+        const results = await taskService.getAll(c, id);
+        return c.json(results);
+    }
+    return c.json({ message: "Invalid token" }, 401);
+};
+
+export const getTaskById = async (c: Context) => {
+    const id = Number(c.req.param("id"));
+    const userId = await extractId(c);
+    if (typeof userId !== "number") {
+        return c.json({ message: "Invalid token" }, 401);
+    }
+    if (!(await taskService.checkOwnership(c, id, userId))) {
+        return c.json({ message: "That task doesn't exist for you." }, 401);
+    }
+    const results = await taskService.getById(c, id);
     return c.json(results);
 };
 
 export const updateTask = async (c: Context) => {
+    const body = await c.req.json();
+    const userId = await extractId(c);
+    if (typeof userId !== "number") {
+        return c.json({ message: "Invalid token" }, 401);
+    }
+    body.userId = userId;
     const parsed = TaskSchema.safeParse(await c.req.json());
     if (!parsed.success) {
         return c.json(parsed.error, 400);
     }
-    const { id, userId, title, completed } = parsed.data;
-    await c.env.DATABASE.prepare(
-        "UPDATE tasks SET title = ?, completed = ? WHERE id = ? AND userId = ?"
-    )
-        .bind(title, completed, id, userId)
-        .run();
+    const { id, title, completed } = parsed.data;
+    if (!(await taskService.checkOwnership(c, Number(id), userId))) {
+        return c.json({ message: "That task doesn't exist for you." }, 401);
+    }
+    await taskService.update(c, Number(id), {
+        userId,
+        title,
+        completed,
+    });
     return c.json({ message: "Task updated successfully." });
 };
 
 export const deleteTask = async (c: Context) => {
-    await c.env.DATABASE.prepare(`DELETE FROM tasks WHERE id = ?`)
-        .bind(c.req.param("taskId"))
-        .run();
+    const userId = await extractId(c);
+    const id = Number(c.req.param("id"));
+    if (typeof userId !== "number") {
+        return c.json({ message: "Invalid token" }, 401);
+    }
+    if (!(await taskService.checkOwnership(c, id, userId))) {
+        return c.json({ message: "That task doesn't exist for you." }, 401);
+    }
+    await taskService.delete(c, id);
     return c.json({ message: "Task deleted successfully." });
 };

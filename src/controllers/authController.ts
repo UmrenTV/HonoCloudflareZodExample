@@ -1,29 +1,63 @@
 import { Context } from "hono";
-import { UserSchema } from "../models/user";
+import { UserSchema, UserRole } from "../models/user";
 import { hashPassword, verifyPassword } from "../utils/auth";
 import { createJWT } from "../utils/jwt";
 
-export const register = async (c: Context) => {
-    const body = await c.req.json();
+// Interfaces for the Register/Login response/request
+
+interface RegisterRequest {
+    username: string;
+    password: string;
+}
+
+interface RegisterResponse {
+    message: string;
+}
+
+interface LoginRequest {
+    username: string;
+    password: string;
+}
+
+interface LoginResponse {
+    message: string;
+    token?: string;
+}
+
+export const register = async (c: Context): Promise<Response> => {
+    const body = (await c.req.json()) as RegisterRequest;
     const parsed = UserSchema.safeParse(body);
     if (!parsed.success) {
-        return c.json(parsed.error, 400);
+        const errorResponse: RegisterResponse = {
+            message: parsed.error.issues
+                .map((issue) => issue.message)
+                .join(", "),
+        };
+        return c.json(errorResponse, 400);
     }
     const { username, password } = parsed.data;
     const hashedPassword = await hashPassword(password);
     await c.env.DATABASE.prepare(
-        "INSERT INTO users (username, password) VALUES (?,?)"
+        "INSERT INTO users (username, password, role) VALUES (?,?, ?)"
     )
-        .bind(username, hashedPassword)
+        .bind(username, hashedPassword, UserRole.User)
         .run();
-    return c.json({ message: "User registered successfully" });
+    const successResponse: RegisterResponse = {
+        message: "User registered successfully",
+    };
+    return c.json(successResponse, 201);
 };
 
-export const login = async (c: Context) => {
-    const body = await c.req.json();
+export const login = async (c: Context): Promise<Response> => {
+    const body = (await c.req.json()) as LoginRequest;
     const parsed = UserSchema.safeParse(body);
     if (!parsed.success) {
-        return c.json(parsed.error, 400);
+        const errorResponse: LoginResponse = {
+            message: parsed.error.issues
+                .map((issue) => issue.message)
+                .join(", "),
+        };
+        return c.json(errorResponse, 400);
     }
     const { username, password } = parsed.data;
     const { results } = await c.env.DATABASE.prepare(
@@ -33,8 +67,18 @@ export const login = async (c: Context) => {
         .all();
     const user = results[0];
     if (user && (await verifyPassword(password, user.password))) {
-        const token = await createJWT({ id: user.id }, c.env.JWT_SECRET);
-        return c.json({ message: "Login successful", token });
+        const token = await createJWT(
+            { id: user.id, role: user.role },
+            c.env.JWT_SECRET
+        );
+        const successResponse: LoginResponse = {
+            message: "Login successful",
+            token,
+        };
+        return c.json(successResponse, 200);
     }
-    return c.json({ message: "Invalid credentials" }, 401);
+    const errorResponse: LoginResponse = {
+        message: "Invalid credentials",
+    };
+    return c.json(errorResponse, 400);
 };

@@ -1,5 +1,5 @@
 export async function createJWT(
-    payload: object,
+    payload: Record<string, unknown>, // Using Record<string, unknown> for a general object type
     secret: string
 ): Promise<string> {
     const header = {
@@ -34,7 +34,8 @@ export async function createJWT(
 export async function verifyJWT(
     token: string,
     secret: string
-): Promise<object | null> {
+): Promise<Record<string, unknown> | null> {
+    // Return type can be an object or null
     const [header, payload, signature] = token.split(".");
     const encoder = new TextEncoder();
 
